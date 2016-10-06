@@ -1,0 +1,31 @@
+---
+title: "Verkefni 5"
+author: "Þórgnýr Thoroddsen"
+date: "9/22/2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+```{r}
+fasteignir <- read.table("gagnasafn_endurmat2017_litid.csv", header = T, sep = ",", fileEncoding = "latin1")
+```
+fasteignir_sorted <- filter(fasteignir, matssvaedi %in% c(11, 31, 80, 120, 150))
+seed = "massiveattack"
+n <- dim(fasteignir_sorted)
+third <- sample(1:n, n/3)
+testmodel <- fasteignir_sorted[third,]
+trainmodel <- fasteignir_sorted[-third,]
+
+lm(trainmodel ~ trainmodel$nuvirdi)
+
+
+
+
+#Vesturbær: Vestan Bræðraborgarstígs, 11
+#Miðbær: Suður-Þingholt, Hlíðar, 31, 80
+#Grafarvogur: Hamrar, Foldir, Hús and 120
+#Seljahverfi. 150
