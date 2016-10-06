@@ -37,29 +37,53 @@ traindata <- fasteignir_sorted[-third,]
 
 #Gerum módel og steppum það.----
 stort_model <- lm(nuvirdi ~ ., data=traindata)
-frum2 <- step(frummodel)
-summary(frum2)
-plot(frum2)
+stort.st <- step(stort_model)
+summary(stort.st)
+plot(stort.st)    #Sjáum að 1865, 1405 og 999 eru stórir.
 
 #Manually að taka út breytur, slást við Steppið----
 #Niðurstaðan er sú sama. Um að gera að keyra báðar aðferðir og sýna summary'in (en ekki reikninginn)
-trainmodel_ms <- trainmodel
-frummodel2 <- lm(nuvirdi ~ ., data = trainmodel_ms)
-summary(frummodel2)
+traindata.manual.st <- traindata
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
 
-trainmodel_ms <- trainmodel_ms[-16]
-frummodel2 <- lm(nuvirdi ~ ., data = trainmodel_ms)
-summary(frummodel2)
+traindata.manual.st <- traindata.manual.st[-13]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
 
-trainmodel_ms <- trainmodel_ms[-3]
-frummodel2 <- lm(nuvirdi ~ ., data = trainmodel_ms)
-summary(frummodel2)
+traindata.manual.st <- traindata.manual.st[-12]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
 
-trainmodel_ms <- trainmodel_ms[-9]
-frummodel2 <- lm(nuvirdi ~ ., data = trainmodel_ms)
-summary(frummodel2)
+traindata.manual.st <- traindata.manual.st[-14]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
 
-plot(frummodel2)
+traindata.manual.st <- traindata.manual.st[-10]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+traindata.manual.st <- traindata.manual.st[-12]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+traindata.manual.st <- traindata.manual.st[-8]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+traindata.manual.st <- traindata.manual.st[-8]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+traindata.manual.st <- traindata.manual.st[-3]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+traindata.manual.st <- traindata.manual.st[-7]
+stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
+summary(stort_model.2)
+
+plot(stort_model.2)
 
 #Reyni að taka út breytur til að laga Q-Q plottið.
 trainmodel_fixrow <- trainmodel_ms
