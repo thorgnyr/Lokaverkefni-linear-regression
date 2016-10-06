@@ -39,7 +39,14 @@ traindata <- fasteignir_sorted[-third,]
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
 summary(stort.st)
-plot(stort.st)    #Sjáum að 1865, 1405 og 999 eru stórir.
+
+#Skipta byggingarári í þrjár breytur----
+traindata$byggarf <- cut(traindata$byggar,c(0,1946,1998,2015), right=F)
+levels(traindata$byggarf)<-c("gamalt","midlungs", "nytt")
+traindata <- traindata[-3]
+stort_model.splitbygg <- lm(nuvirdi ~ ., data =traindata)
+summary(stort_model.splitbygg)
+plot(stort_model.splitbygg)
 
 #Manually að taka út breytur, slást við Steppið----
 #Niðurstaðan er sú sama. Um að gera að keyra báðar aðferðir og sýna summary'in (en ekki reikninginn)
