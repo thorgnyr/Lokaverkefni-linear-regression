@@ -40,67 +40,22 @@ stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
 summary(stort.st)
 
-#Skipta byggingarári í þrjár breytur----
-traindata$byggarf <- cut(traindata$byggar,c(0,1946,1998,2015), right=F)
-levels(traindata$byggarf)<-c("gamalt","midlungs", "nytt")
-traindata <- traindata[-3]
-stort_model.splitbygg <- lm(nuvirdi ~ ., data =traindata)
-summary(stort_model.splitbygg)
-plot(stort_model.splitbygg)
+#Skerum út jaðarmælingar úr stóra módelinu.----
+plot(stort.st)
+diag1 <- fortify(stort.st)
+diag1 <- diag1[diag1$.stdresid < 6.5, ]
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+summary(diag1.m)
+plot(diag1.m)
 
-#Manually að taka út breytur, slást við Steppið----
-#Niðurstaðan er sú sama. Um að gera að keyra báðar aðferðir og sýna summary'in (en ekki reikninginn)
-traindata.manual.st <- traindata
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
+#Skipta byggingarári í þrjár breytur og transform----
+diag1$byggarf <- cut(diag1$byggar,c(0,1938,1960,1983, 2016), right=F)
+levels(diag1$byggarf)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+diag1 <- diag1[-3]
+diag1.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + byggarf + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+summary(diag1.byggar)
+plot(diag1.byggar)
 
-traindata.manual.st <- traindata.manual.st[-13]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-12]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-14]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-10]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-12]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-8]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-8]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-3]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-traindata.manual.st <- traindata.manual.st[-7]
-stort_model.2 <- lm(nuvirdi ~ ., data = traindata.manual.st)
-summary(stort_model.2)
-
-plot(stort_model.2)
-
-#Reyni að taka út breytur til að laga Q-Q plottið.
-trainmodel_fixrow <- trainmodel_ms
-trainmodel_fixrow <- trainmodel_fixrow[-c(999, 1405), ]
-frummodel3 <- lm(nuvirdi ~ ., data = trainmodel_fixrow)
-plot(frummodel3)
-
-#Skoðum víxlhrif á verði og tegund eigna----
-vixlhrif <- lm(nuvirdi ~ teg_eign * ibm2, data = trainmodel)
-plot(
 
 #Prufa að búa til módel úr kaupárum á núvirði.----
 
