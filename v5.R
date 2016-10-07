@@ -46,15 +46,43 @@ diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjk
 summary(diag1.m)
 
 #Skipta byggingarári í þrjár breytur og transform----
-diag1$byggarf <- cut(diag1$byggar,c(0,1938,1960,1983, 2016), right=F)
-levels(diag1$byggarf)<-c("gamalt","midlungs", "lanabreyting", "nytt")
-diag1 <- diag1[-3]
-diag1.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + byggarf + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+diag1$byggar <- cut(diag1$byggar,c(0, 1938,1960,1983, 2016), right=F)
+levels(diag1$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+diag1.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.byggar)
-plot(diag1.byggar)
 
 #Keyra þetta á testmódelið.----
 thefinalcountdown <- predict(diag1.byggar, newdata = testdata)
+
+
+
+
+
+
+
+
+
+
+
+
+#Gerum módel og steppum það.----
+litid_model <- lm(nuvirdi ~ ., data=testdata)
+litid.st <- step(litid_model)
+summary(litid_model)
+
+#Skerum út jaðarmælingar úr stóra módelinu.----
+diag2 <- fortify(litid.st)
+diag2 <- diag2[diag2$.stdresid < 6.5, ]
+diag2.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag2)
+summary(diag2.m)
+
+#Skipta byggingarári í þrjár breytur og transform----
+diag2$byggarf <- cut(diag2$byggar,c(0,1938,1960,1983, 2016), right=F)
+levels(diag2$byggarf)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+diag2 <- diag2[-3]
+diag2.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + byggarf + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag2)
+summary(diag2.byggar)
+plot(diag2.byggar)
 
 
 
