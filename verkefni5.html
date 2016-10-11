@@ -148,6 +148,25 @@ $(document).ready(function () {
 <li>Við tíföldum breytuna <strong>ibm2</strong> (sem tiltekur stærð eigna). Það er í lagi þar sem samband gildisins við aðrar breytur breytist ekki við þá breytingu, en við komumst hjá því að þurfa að vinna með hana sem kommutölubreytu.</li>
 <li>Að lokum skiptum við byggingarársbreytunni upp í fjóra flokka: Gamalt, miðlungs, lánabreyting og Nýtt. Ástæðan er sú að þegar við skoðum breytuna sjáum við að það má skipta eignunum niður á fjögur tímabil þegar þær eru bornar saman við núvirði þeirra. Gömul hús eru þá frá 1938 eða fyrr, miðlungsgömul hús eru þá fram að 1960, breyting varð á lánafyrirkomulagi árið 1983 (og það sýnir sig í gögnunum) að þá breyttist verðlagið. Eignir frá eftir 1983 eru því skilgreind sem ný.</li>
 </ul>
+<p>Nú þegar allar breytingar á gögnunum hafa átt sér stað er kominn tími til að skipta þeim í tvo hluta. Tveir þriðju gagnanna verða settir í gagnasett sem við köllum <strong>traindata</strong>. Það sett munum við nú nota til að búa til línulegt módel fyrir þessa tegund gagna, sem að lýsir sambandi breytanna við núvirði eignanna. Að því loknu munum við skella <strong>testdata</strong> settinu inn í módelið til að sjá hvort að módelið virki fyrir það sett líka.</p>
+<pre class="r"><code>set.seed(5)
+n &lt;- dim(fasteignir_sorted)[1]
+third &lt;- sample(1:n, n/3)
+testdata &lt;- fasteignir_sorted[third,]
+traindata &lt;- fasteignir_sorted[-third,]</code></pre>
+<hr />
+<div id="gerum-model-og-steppum-a.-" class="section level1">
+<h1>Gerum módel og steppum það.—-</h1>
+<p>stort_model &lt;- lm(nuvirdi ~ ., data=traindata) stort.st &lt;- step(stort_model) summary(stort.st)</p>
+</div>
+<div id="skerum-ut-jaarmlingar-ur-stora-modelinu.-" class="section level1">
+<h1>Skerum út jaðarmælingar úr stóra módelinu.—-</h1>
+<p>diag1 &lt;- fortify(stort.st) diag1 &lt;- diag1[diag1$.stdresid &lt; 6.5, ] diag1.m &lt;- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1) summary(diag1.m)</p>
+</div>
+<div id="transform-" class="section level1">
+<h1>Transform—-</h1>
+<p>boxCox(diag1.m) diag1.byggar &lt;- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1) summary(diag1.byggar)</p>
+</div>
 
 
 
