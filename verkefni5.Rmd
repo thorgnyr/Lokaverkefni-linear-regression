@@ -73,26 +73,35 @@ traindata <- fasteignir_sorted[-third,]
 ```
 ----
 
-Nú skulum við gera módel sem gerir núvirði að háðu breytunni. Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsummar AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept.
+Nú skulum við gera módel sem gerir núvirði að háðu breytunni.
 
 ```{r}
 stort_model <- lm(nuvirdi ~ ., data=traindata)
-stort.st <- step(stort_model)
-summary(stort.st)
+summary(stort_model)
 ```
 
-Skerum út jaðarmælingar úr stóra módelinu.----
+Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsummar AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept. Að þessari aðgerð lokinni skoðum við summary af nýja módelinu sem við fengum úr steppinu.
+
+```{r echo = FALSE}
+stort.st <- step(stort_model)
+```
 
 ```{r}
+summary(stort.st)
+```
+plot(stort.st)
+Þegar við skoðum [þetta plott] af módelinu sem að við sitjum uppi með eftir steppið, þá sjáum við að hugsanlega gæti það bætt módelið ef við tökum út útlagana sem þarna koma fram.
+
+``{r}
 diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.m)
-```
+``
 
 Transform----
 
-```{r}
+``{r}
 boxCox(diag1.m)
 diag1.byggar <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.byggar)

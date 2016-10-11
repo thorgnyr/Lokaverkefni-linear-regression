@@ -27,12 +27,11 @@ fasteignir_sorted <- fasteignir_sorted[-1]
 fasteignir_sorted$kaup_ar <- as.factor(fasteignir_sorted$kaup_ar)
 fasteignir_sorted$ibm2 <- fasteignir_sorted$ibm2*10
 #Byggar breytingin----
-boxplot(fasteignir_sorted)
 fasteignir_sorted$byggar <- cut(fasteignir_sorted$byggar,c(0, 1938,1960,1983, 2016), right=F)
 levels(fasteignir_sorted$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
 
 #Trans fasteignir----
-fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
+#fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
 
 #Slembiúrtök úr gögnunum. Búið til sett til að train'a módelið og annað til að að prufa módelið á.------
 set.seed(5)
