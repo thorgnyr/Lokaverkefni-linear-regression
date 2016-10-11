@@ -1,6 +1,6 @@
 ---
 title: "STÆ312: Verkefni 5"
-author: "Þórgnýr Thoroddsen"
+author: "Þórgnýr Thoroddsen & Esther Hlíðar Jensen"
 date: "11. október 2016"
 output: html_document
 ---
@@ -72,23 +72,31 @@ testdata <- fasteignir_sorted[third,]
 traindata <- fasteignir_sorted[-third,]
 ```
 ----
-#Gerum módel og steppum það.----
+
+Nú skulum við gera módel sem gerir núvirði að háðu breytunni. Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsummar AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept.
+
+```{r}
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
 summary(stort.st)
+```
 
-#Skerum út jaðarmælingar úr stóra módelinu.----
+Skerum út jaðarmælingar úr stóra módelinu.----
+
+```{r}
 diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.m)
+```
 
+Transform----
 
-#Transform----
+```{r}
 boxCox(diag1.m)
 diag1.byggar <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.byggar)
-  
+``  
   
   
   
