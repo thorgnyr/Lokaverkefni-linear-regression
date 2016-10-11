@@ -103,18 +103,44 @@ Af summary að dæma hefur módelið batnað örlítið, en það hlýtur að ve
 
 [Hérna verður QQ og boxCox saman]
 
-Transform----
+Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelið með því að taka kvaðratrót af gildum háðu breytunnar (núvirði).
 
-``{r}
-boxCox(diag1.m)
-diag1.byggar <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
-summary(diag1.byggar)
-``  
+```{r}
+fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
+```
+
+Í kjölfarið þurfum við að vinna með varpaða gagnasettið á sama hátt og það óvarpaða, og skoðum síðan summary af því.
+
+```{r echo = FALSE}
+set.seed(5)
+n <- dim(fasteignir_sorted)[1]
+third <- sample(1:n, n/3)
+testdata <- fasteignir_sorted[third,]
+traindata <- fasteignir_sorted[-third,]
+stort_model <- lm(nuvirdi ~ ., data=traindata)
+stort.st <- step(stort_model)
+diag1 <- fortify(stort.st)
+diag1 <- diag1[diag1$.stdresid < 6.5, ]
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+```
+
+```{r}
+summary(diag1.m)
+```
+
+Eins og við sjáum í summary þá fáum við umtalsvert hærra skýringarhlutfall en áður. Nú skulum við sjá hvað gerist þegar við setjum testdata gagnasettið inn í módelið og sjáum hvort að við fáum ásættanlegt skýringarhlutfall.
+
+```{r}
+thefinalcountdown <- predict.lm(diag1.m, newdata = testdata)
+e <- testdata$nuvirdi - thefinalcountdown
+RSS <- sum(e^2)
+TSS <- sum((testdata$nuvirdi - mean(testdata$nuvirdi))^2)
+rAdj <- 1 - ((RSS/725)/(TSS/741))
+```
+
+Skýringarhlutfallið á testdata gagnasettinu er því `r rAdj`.
   
- 
-  
-  
-  
+
   
   
   
