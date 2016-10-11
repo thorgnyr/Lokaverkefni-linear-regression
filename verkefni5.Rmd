@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(lubridate)
 library(purrr)
@@ -24,7 +24,7 @@ library(stats)
   * Grafarvogur: Hamrar, Foldir og Hús
   * Seljahverfi
   
-```{r echo = FALSE}
+```{r, warning=FALSE, error=FALSE, include=FALSE}
 fasteignir <- read.table("gagnasafn_endurmat2017_litid.csv", header = T, sep = ",", fileEncoding = "latin1")
 fasteignir_sorted <- filter(fasteignir, matssvaedi %in% c(11, 31, 80, 120, 150))
 ```
@@ -40,7 +40,7 @@ Um er að ræða 2228 eignir í þessum fimm hverfum. Við fjarlægjum síðan �
   + Við tíföldum breytuna **ibm2** (sem tiltekur stærð eigna). Það er í lagi þar sem samband gildisins við aðrar breytur breytist ekki við þá breytingu, en við komumst hjá því að þurfa að vinna með hana sem kommutölubreytu.
   + Að lokum skiptum við byggingarársbreytunni upp í fjóra flokka: Gamalt, miðlungs, lánabreyting og Nýtt. Ástæðan er sú að þegar við skoðum breytuna sjáum við að það má skipta eignunum niður á fjögur tímabil þegar þær eru bornar saman við núvirði þeirra. Gömul hús eru þá frá 1938 eða fyrr, miðlungsgömul hús eru þá fram að 1960, breyting varð á lánafyrirkomulagi árið 1983 (og það sýnir sig í gögnunum) að þá breyttist verðlagið. Eignir frá eftir 1983 eru því skilgreind sem ný.
 
-```{r echo = FALSE}
+```{r, warning=FALSE, error=FALSE, include=FALSE}
 fasteignir_sorted <- fasteignir_sorted[, -c(1, 5, 21)]
 
 fasteignir_sorted$lyfta[fasteignir_sorted$lyfta > 0] <- 1
@@ -64,7 +64,7 @@ levels(fasteignir_sorted$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
 
 Nú þegar allar breytingar á gögnunum hafa átt sér stað er kominn tími til að skipta þeim í tvo hluta. Tveir þriðju gagnanna verða settir í gagnasett sem við köllum **traindata**. Það sett munum við nú nota til að búa til línulegt módel fyrir þessa tegund gagna, sem að lýsir sambandi breytanna við núvirði eignanna. Að því loknu munum við skella **testdata** settinu inn í módelið til að sjá hvort að módelið virki fyrir það sett líka.
 
-```{r}
+```{r, echo = TRUE}
 set.seed(5)
 n <- dim(fasteignir_sorted)[1]
 third <- sample(1:n, n/3)
@@ -75,24 +75,23 @@ traindata <- fasteignir_sorted[-third,]
 
 Nú skulum við gera módel sem gerir núvirði að háðu breytunni.
 
-```{r}
+```{r, echo = TRUE}
 stort_model <- lm(nuvirdi ~ ., data=traindata)
-summary(stort_model)
 ```
 
 Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsummar AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept. Að þessari aðgerð lokinni skoðum við summary af nýja módelinu sem við fengum úr steppinu.
 
-```{r echo = FALSE}
+```{r, warning=FALSE, error=FALSE, include=FALSE}
 stort.st <- step(stort_model)
 ```
 
 ```{r}
 summary(stort.st)
 ```
-plot(stort.st)
+
 Þegar við skoðum [þetta plott] af módelinu sem að við sitjum uppi með eftir steppið, þá sjáum við að hugsanlega gæti það bætt módelið ef við tökum út útlagana sem þarna koma fram. Að því loknu skellum við upp nýju módeli úr nýja gagnasettinu.
 
-```{r}
+```{r, echo = TRUE}
 diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
@@ -105,13 +104,13 @@ Af summary að dæma hefur módelið batnað örlítið, en það hlýtur að ve
 
 Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelið með því að taka kvaðratrót af gildum háðu breytunnar (núvirði).
 
-```{r}
+```{r, echo = TRUE}
 fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
 ```
 
 Í kjölfarið þurfum við að vinna með varpaða gagnasettið á sama hátt og það óvarpaða, og skoðum síðan summary af því.
 
-```{r echo = FALSE}
+```{r, warning=FALSE, error=FALSE, include=FALSE}
 set.seed(5)
 n <- dim(fasteignir_sorted)[1]
 third <- sample(1:n, n/3)
@@ -130,7 +129,7 @@ summary(diag1.m)
 
 Eins og við sjáum í summary þá fáum við umtalsvert hærra skýringarhlutfall en áður. Nú skulum við sjá hvað gerist þegar við setjum testdata gagnasettið inn í módelið og sjáum hvort að við fáum ásættanlegt skýringarhlutfall.
 
-```{r}
+```{r, echo = TRUE}
 thefinalcountdown <- predict.lm(diag1.m, newdata = testdata)
 e <- testdata$nuvirdi - thefinalcountdown
 RSS <- sum(e^2)
@@ -141,7 +140,23 @@ rAdj <- 1 - ((RSS/725)/(TSS/741))
 Skýringarhlutfallið á testdata gagnasettinu er því `r rAdj`.
   
 
+p6 <- ggplot(stort.st, aes(x = seq(1:length(.resid)), y = .resid)) + geom_point()
+p6 <- p6 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
+p6 <- p6 + xlab("Index") + ylab("Residuals")
+p6 <- p6 + geom_text(aes(label = ifelse(abs(.resid) > 100, row.names(diag1), "")), hjust = -0.2)
   
-  
-  
+p <- length(coef(stort.st))
+n <- length(fitted(stort.st))
+p7 <- ggplot(stort.st, aes(x = seq(1:length(.hat)), y = .hat)) + geom_point()
+p7 <- p7 + geom_hline(yintercept = 2 * p/n, col = "red", linetype = "dashed")
+p7 <- p7 + xlab("Index") + ylab("Leverages")
+p7 <- p7 + geom_text(aes(label = ifelse(abs(.hat) > 0.05, row.names(diag1), "")), hjust = -0.3)
+
+p8 <- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq()
+p8 <- p8 + geom_abline(slope = 1)
+p8 <- p8 + ylab("Studentized residuals")
+
+p6
+p7
+p8
   
