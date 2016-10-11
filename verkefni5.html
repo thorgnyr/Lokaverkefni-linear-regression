@@ -244,7 +244,8 @@ summary(diag1.m)</code></pre>
 ## Multiple R-squared:  0.8394, Adjusted R-squared:  0.8371 
 ## F-statistic: 363.6 on 21 and 1461 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>Af summary að dæma hefur módelið batnað örlítið, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa módelinu á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.</p>
-<p>[Hérna verður QQ og boxCox saman]</p>
+<p>p8 &lt;- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq() p8 &lt;- p8 + geom_abline(slope = 1) p8 &lt;- p8 + ylab(“Studentized residuals”) p8</p>
+<p>bCp &lt;- boxCox(stort.st)</p>
 <p>Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelið með því að taka kvaðratrót af gildum háðu breytunnar (núvirði).</p>
 <pre class="r"><code>fasteignir_sorted$nuvirdi &lt;- sqrt(fasteignir_sorted$nuvirdi)</code></pre>
 <p>Í kjölfarið þurfum við að vinna með varpaða gagnasettið á sama hátt og það óvarpaða, og skoðum síðan summary af því.</p>
@@ -294,6 +295,8 @@ RSS &lt;- sum(e^2)
 TSS &lt;- sum((testdata$nuvirdi - mean(testdata$nuvirdi))^2)
 rAdj &lt;- 1 - ((RSS/725)/(TSS/741))</code></pre>
 <p>Skýringarhlutfallið á testdata gagnasettinu er því 0.8325881.</p>
+<p>p6 p7</p>
+<p>diag1_tafla&lt;-tidy(diag1.m) diag1_tafla</p>
 
 
 

@@ -14,6 +14,7 @@ library(ggplot2)
 library(GGally)
 library(car)
 library(stats)
+library(broom)
 ```
 
 Í þessu verkefni fáum við gagnasett sem inniheldur gögn tæplega 35 þúsund fasteignir. Við munum þó eingöngu vinna með fasteignir í eftirfarandi hverfum:
@@ -100,7 +101,12 @@ summary(diag1.m)
 
 Af summary að dæma hefur módelið batnað örlítið, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa módelinu á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.
 
-[Hérna verður QQ og boxCox saman]
+p8 <- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq()
+p8 <- p8 + geom_abline(slope = 1)
+p8 <- p8 + ylab("Studentized residuals")
+p8
+
+bCp <- boxCox(stort.st)
 
 Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelið með því að taka kvaðratrót af gildum háðu breytunnar (núvirði).
 
@@ -119,6 +125,19 @@ traindata <- fasteignir_sorted[-third,]
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
 diag1 <- fortify(stort.st)
+
+p6 <- ggplot(stort.st, aes(x = seq(1:length(.resid)), y = .resid)) + geom_point()
+p6 <- p6 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
+p6 <- p6 + xlab("Index") + ylab("Residuals")
+p6 <- p6 + geom_text(aes(label = ifelse(abs(.resid) > 75, row.names(diag1), "")), hjust = -0.2)
+  
+p <- length(coef(stort.st))
+n <- length(fitted(stort.st))
+p7 <- ggplot(stort.st, aes(x = seq(1:length(.hat)), y = .hat)) + geom_point()
+p7 <- p7 + geom_hline(yintercept = 2 * p/n, col = "red", linetype = "dashed")
+p7 <- p7 + xlab("Index") + ylab("Leverages")
+p7 <- p7 + geom_text(aes(label = ifelse(abs(.hat) > 0.05, row.names(diag1), "")), hjust = -0.3)
+
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 ```
@@ -140,23 +159,14 @@ rAdj <- 1 - ((RSS/725)/(TSS/741))
 Skýringarhlutfallið á testdata gagnasettinu er því `r rAdj`.
   
 
-p6 <- ggplot(stort.st, aes(x = seq(1:length(.resid)), y = .resid)) + geom_point()
-p6 <- p6 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
-p6 <- p6 + xlab("Index") + ylab("Residuals")
-p6 <- p6 + geom_text(aes(label = ifelse(abs(.resid) > 100, row.names(diag1), "")), hjust = -0.2)
-  
-p <- length(coef(stort.st))
-n <- length(fitted(stort.st))
-p7 <- ggplot(stort.st, aes(x = seq(1:length(.hat)), y = .hat)) + geom_point()
-p7 <- p7 + geom_hline(yintercept = 2 * p/n, col = "red", linetype = "dashed")
-p7 <- p7 + xlab("Index") + ylab("Leverages")
-p7 <- p7 + geom_text(aes(label = ifelse(abs(.hat) > 0.05, row.names(diag1), "")), hjust = -0.3)
 
-p8 <- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq()
-p8 <- p8 + geom_abline(slope = 1)
-p8 <- p8 + ylab("Studentized residuals")
+
+
 
 p6
 p7
-p8
+
+
+diag1_tafla<-tidy(diag1.m)
+diag1_tafla
   
