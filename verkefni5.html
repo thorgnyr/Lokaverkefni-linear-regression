@@ -125,13 +125,28 @@ $(document).ready(function () {
 </div>
 
 
-<p>Í þessu verkefni fáum við gagnasett sem inniheldur gögn um yfir 35 þúsund fasteignir. Við munum þó eingöngu vinna með fasteignir í eftirfarandi hverfum:</p>
+<p>Í þessu verkefni fáum við gagnasett sem inniheldur gögn tæplega 35 þúsund fasteignir. Við munum þó eingöngu vinna með fasteignir í eftirfarandi hverfum:</p>
 <ul>
 <li>Vesturbær: Vestan Bræðraborgarstígs</li>
 <li>Miðbær: Suður-Þingholt</li>
 <li>Hlíðar</li>
 <li>Grafarvogur: Hamrar, Foldir og Hús</li>
 <li>Seljahverfi</li>
+</ul>
+<p>Um er að ræða 2228 eignir í þessum fimm hverfum. Við fjarlægjum síðan þær breytur sem munu augljóslega hafa engin áhrif á módelið okkar. Hér að neðan mun ég fara stuttlega yfir það hvernig gögnin eru unnin áður en við hefjum greiningu á þeim.</p>
+<ul>
+<li>Við tökum út þrjár breytur.
+<ul>
+<li><strong>rfastnum</strong> er fastanúmer eignar. Það er harla líklegt að tiltekin fastanúmer hafi kerfisbundin áhrif á verð fasteigna, svo við tökum þá breytu út.<br />
+</li>
+<li><strong>svfn</strong> er auðkenni sveitarfélags. Þar sem öll hverfin eru í Reykjavík þá breytist hún ekki neinstaðar, og því tökum við hana út.<br />
+</li>
+<li>Að lokum tökum við út <strong>undirmatssvaedi</strong> þar sem við ætlum ekki að skoða eignirnar með tilliti til þess, heldur matssvæðanna.</li>
+</ul></li>
+<li>Næst breytum við breytunum <strong>lyfta</strong>, <strong>stig10</strong> og <strong>fjbilast</strong> á þann veg að þær tilgreini ekki fjölda heldur hvort það sé til staðar. Þannig fær breytan <strong>lyfta</strong> gildið 0, ef engin lyfta er til staðar, eða gildið 1 hvort sem það er ein lyfta eða fleiri. Þær verða enn fremur gerðar að flokkabreytum.</li>
+<li>Við breytum, til einföldunar, <strong>kdagur</strong> breytunni (sem tiltekur kaupdag fasteigna) í ártal fremur en að halda henni með nákvæmum dagsetningum.</li>
+<li>Við tíföldum breytuna <strong>ibm2</strong> (sem tiltekur stærð eigna). Það er í lagi þar sem samband gildisins við aðrar breytur breytist ekki við þá breytingu, en við komumst hjá því að þurfa að vinna með hana sem kommutölubreytu.</li>
+<li>Að lokum skiptum við byggingarársbreytunni upp í fjóra flokka: Gamalt, miðlungs, lánabreyting og Nýtt. Ástæðan er sú að þegar við skoðum breytuna sjáum við að það má skipta eignunum niður á fjögur tímabil þegar þær eru bornar saman við núvirði þeirra. Gömul hús eru þá frá 1938 eða fyrr, miðlungsgömul hús eru þá fram að 1960, breyting varð á lánafyrirkomulagi árið 1983 (og það sýnir sig í gögnunum) að þá breyttist verðlagið. Eignir frá eftir 1983 eru því skilgreind sem ný.</li>
 </ul>
 
 
