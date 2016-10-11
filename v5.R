@@ -26,6 +26,13 @@ fasteignir_sorted$kaup_ar <- year(fasteignir_sorted$kaup_ar)
 fasteignir_sorted <- fasteignir_sorted[-1]
 fasteignir_sorted$kaup_ar <- as.factor(fasteignir_sorted$kaup_ar)
 fasteignir_sorted$ibm2 <- fasteignir_sorted$ibm2*10
+#Byggar breytingin----
+fasteignir_sorted$byggar <- cut(fasteignir_sorted$byggar,c(0, 1938,1960,1983, 2016), right=F)
+levels(fasteignir_sorted$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+
+#Trans fasteignir----
+fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
+
 #Slembiúrtök úr gögnunum. Búið til sett til að train'a módelið og annað til að að prufa módelið á.------
 set.seed(5)
 n <- dim(fasteignir_sorted)[1]
@@ -34,6 +41,7 @@ testdata <- fasteignir_sorted[third,]
 traindata <- fasteignir_sorted[-third,]
 
 #################HINGAÐ ER ALLT EINS###########################
+
 #Gerum módel og steppum það.----
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
@@ -42,52 +50,24 @@ summary(stort.st)
 #Skerum út jaðarmælingar úr stóra módelinu.----
 diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
-diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.m)
 
-#Skipta byggingarári í þrjár breytur og transform----
-diag1$byggar <- cut(diag1$byggar,c(0, 1938,1960,1983, 2016), right=F)
-levels(diag1$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
-diag1.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+
+#Transform----
+boxCox(diag1.m)
+diag1.byggar <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary(diag1.byggar)
+#Hér taka fram að við breytum breytunum í upphafsgögnum.
+
+#Keyrt á testdata
+thefinalcountdown <- predict.lm(diag1.m, newdata = testdata)
 
 
-#########TESTMODEL VINNA###############
-
-#Gerum módel og steppum það.
-litid_model <- lm(nuvirdi ~ ., data=testdata)
-extr.byggar <- as.data.frame(testdata$byggar)
-litid.st <- step(litid_model)
-summary(litid_model)
-
-#Skerum út jaðarmælingar úr stóra módelinu.
-diag2 <- fortify(litid.st)
-diag2 <- cbind(diag2, extr.byggar)
-diag2 <- diag2[diag2$.stdresid < 6.5, ]
-diag2.m <- lm(nuvirdi ~ teg_eign + `testdata$byggar` + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag2)
-summary(diag2.m)
-
-#Skipta byggingarári í þrjár breytur og transform
-diag2$`testdata$byggar` <- cut(diag2$`testdata$byggar`,c(0,1938,1960,1983, 2016), right=F)
-levels(diag2$`testdata$byggar`)<-c("gamalt","midlungs", "lanabreyting", "nytt")
-diag2.byggar <- lm(sqrt(nuvirdi) ~ teg_eign + `testdata$byggar` + haednr + lyfta + ibm2 + fjhaed + fjklos +fjstof + matssvaedi + ibteg + kaup_ar, data = diag2)
-summary(diag2.byggar)
-plot(diag2.byggar)
-
-#Þetta----
-
-litid_model <- lm(nuvirdi ~ ., data=testdata)
-extr.byggar <- as.data.frame(testdata$byggar)
-litid.st <- step(litid_model)
-diag2 <- fortify(litid.st)
-diag2 <- cbind(diag2, extr.byggar)
-diag2$byggar <- diag2$`testdata$byggar`
-diag2 <- diag2[diag2$.stdresid < 6.5, ]
-diag2$byggar <- cut(diag2$byggar, c(0,1938,1960,1983, 2016), right=F)
-levels(diag2$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+e <- testdata$nuvirdi - thefinalcountdown
+RSS <- sum(e^2)
+TSS <- sum((testdata$nuvirdi - mean(testdata$nuvirdi))^2)
+rAdj <- 1 - ((RSS/725)/(TSS/741))
 
 
 
-
-#Keyra þetta á testmódelið.----
-thefinalcountdown <- predict(diag1.byggar, newdata = diag2)
