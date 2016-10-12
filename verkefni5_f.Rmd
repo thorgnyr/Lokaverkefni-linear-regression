@@ -1,0 +1,199 @@
+---
+  title: "ST?312: Verkefni 5"
+author: "??rgn?r Thoroddsen & Esther Hl??ar Jensen"
+date: "11. okt?ber 2016"
+output: html_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(lubridate)
+library(purrr)
+library(ggplot2)
+library(GGally)
+library(car)
+library(stats)
+```
+```{r,include=FALSE}
+####
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+? ?essu verkefni f?um vi? gagnasett sem inniheldur g?gn t?plega 35 ??sund fasteignir. Vi? munum ?? eing?ngu vinna me? fasteignir ? eftirfarandi hverfum:
+  
+  * Vesturb?r: Vestan Br??raborgarst?gs
+* Mi?b?r: Su?ur-?ingholt
+* Hl??ar
+* Grafarvogur: Hamrar, Foldir og H?s
+* Seljahverfi
+
+```{r, warning=FALSE, error=FALSE, include=FALSE}
+#fasteignir <- read.table("gagnasafn_endurmat2017_litid.csv", header = T, sep = ",", fileEncoding = "latin1")
+fasteignir <- read.csv("~/hagnyt_tolfraedi/STAE312/timi5/gagnasafn_endurmat2017_litid.csv")
+fasteignir_sorted <- filter(fasteignir, matssvaedi %in% c(11, 31, 80, 120, 150))
+```
+
+Um er a? r??a 2228 eignir ? ?essum fimm hverfum. Vi? fjarl?gjum s??an ??r breytur sem munu auglj?slega hafa engin ?hrif ? m?deli? okkar. H?r a? ne?an mun ?g fara stuttlega yfir ?a? hvernig g?gnin eru unnin ??ur en vi? hefjum greiningu ? ?eim.
+
+* Vi? t?kum ?t ?rj?r breytur.
++ **rfastnum** er fastan?mer eignar. ?a? er harla l?klegt a? tiltekin fastan?mer hafi kerfisbundin ?hrif ? ver? fasteigna, svo vi? t?kum ?? breytu ?t.  
++ **svfn** er au?kenni sveitarf?lags. ?ar sem ?ll hverfin eru ? Reykjav?k ?? breytist h?n ekki neinsta?ar, og ?v? t?kum vi? hana ?t.  
++ A? lokum t?kum vi? ?t **undirmatssvaedi** ?ar sem vi? ?tlum ekki a? sko?a eignirnar me? tilliti til ?ess, heldur matssv??anna.
++ N?st breytum vi? breytunum **lyfta**, **stig10** og **fjbilast** ? ?ann veg a? ??r tilgreini ekki fj?lda heldur hvort ?a? s? til sta?ar. ?annig f?r breytan **lyfta** gildi? 0, ef engin lyfta er til sta?ar, e?a gildi? 1 hvort sem ?a? er ein lyfta e?a fleiri. ??r ver?a enn fremur ger?ar a? flokkabreytum.
++ Vi? breytum, til einf?ldunar, **kdagur** breytunni (sem tiltekur kaupdag fasteigna) ? ?rtal fremur en a? halda henni me? n?kv?mum dagsetningum. 
++ Vi? t?f?ldum breytuna **ibm2** (sem tiltekur st?r? eigna). ?a? er ? lagi ?ar sem samband gildisins vi? a?rar breytur breytist ekki vi? ?? breytingu, en vi? komumst hj? ?v? a? ?urfa a? vinna me? hana sem kommut?lubreytu.
++ A? lokum skiptum vi? byggingar?rsbreytunni upp ? fj?ra flokka: Gamalt, mi?lungs, l?nabreyting og N?tt. ?st??an er s? a? ?egar vi? sko?um breytuna sj?um vi? a? ?a? m? skipta eignunum ni?ur ? fj?gur t?mabil ?egar ??r eru bornar saman vi? n?vir?i ?eirra. G?mul h?s eru ?? fr? 1938 e?a fyrr, mi?lungsg?mul h?s eru ?? fram a? 1960, breyting var? ? l?nafyrirkomulagi ?ri? 1983 (og ?a? s?nir sig ? g?gnunum) a? ?? breyttist ver?lagi?. Eignir fr? eftir 1983 eru ?v? skilgreind sem n?.
+
+```{r, warning=FALSE, error=FALSE, include=FALSE}
+fasteignir_sorted <- fasteignir_sorted[, -c(1, 5, 21)]
+
+fasteignir_sorted$lyfta[fasteignir_sorted$lyfta > 0] <- 1
+fasteignir_sorted$stig10[fasteignir_sorted$stig10 < 10] <- 0
+fasteignir_sorted$stig10[fasteignir_sorted$stig10 == 10] <- 1
+fasteignir_sorted$fjbilast[fasteignir_sorted$fjbilast > 0] <- 1
+
+fasteignir_sorted$lyfta <- as.factor(fasteignir_sorted$lyfta)
+fasteignir_sorted$stig10 <- as.factor(fasteignir_sorted$stig10)
+fasteignir_sorted$fjbilast <- as.factor(fasteignir_sorted$fjbilast)
+
+fasteignir_sorted$kaup_ar <- as.Date(fasteignir_sorted$kdagur, format = "%Y-%m-%d")
+fasteignir_sorted$kaup_ar <- year(fasteignir_sorted$kaup_ar)
+fasteignir_sorted <- fasteignir_sorted[-1]
+fasteignir_sorted$kaup_ar <- as.factor(fasteignir_sorted$kaup_ar)
+fasteignir_sorted$ibm2 <- fasteignir_sorted$ibm2*10
+
+fasteignir_sorted$byggar <- cut(fasteignir_sorted$byggar,c(0, 1938,1960,1983, 2016), right=F)
+levels(fasteignir_sorted$byggar)<-c("gamalt","midlungs", "lanabreyting", "nytt")
+```
+
+N? ?egar allar breytingar ? g?gnunum hafa ?tt s?r sta? er kominn t?mi til a? skipta ?eim ? tvo hluta. Tveir ?ri?ju gagnanna ver?a settir ? gagnasett sem vi? k?llum **traindata**. ?a? sett munum vi? n? nota til a? b?a til l?nulegt m?del fyrir ?essa tegund gagna, sem a? l?sir sambandi breytanna vi? n?vir?i eignanna. A? ?v? loknu munum vi? skella **testdata** settinu inn ? m?deli? til a? sj? hvort a? m?deli? virki fyrir ?a? sett l?ka.
+
+```{r, echo = TRUE}
+set.seed(5)
+n <- dim(fasteignir_sorted)[1]
+third <- sample(1:n, n/3)
+testdata <- fasteignir_sorted[third,]
+traindata <- fasteignir_sorted[-third,]
+```
+----
+  
+  N? skulum vi? gera m?del sem gerir n?vir?i a? h??u breytunni.
+
+```{r, echo = TRUE}
+stort_model <- lm(nuvirdi ~ ., data=traindata)
+```
+
+A? ?v? loknu notum vi? **step()** skipunina til a? taka ?t breytur sem hafa l?klega l?til ?hrif ?t. Skipunin sko?ar AIC gildin og tekur breytur ?t sem hafa l?gra gildi en vi?mi?i?. Me? ?v? m?ti er heildarsummar AIC l?kku? ? m?delinu ?ar til engin breyta er me? l?gra AIC gildi en intercept. A? ?essari a?ger? lokinni sko?um vi? summary af n?ja m?delinu sem vi? fengum ?r steppinu.
+
+```{r, warning=FALSE, error=FALSE, include=FALSE}
+stort.st <- step(stort_model)
+```
+
+```{r}
+summary(stort.st)
+```
+
+?egar vi? sko?um [?etta plott] af m?delinu sem a? vi? sitjum uppi me? eftir steppi?, ?? sj?um vi? a? hugsanlega g?ti ?a? b?tt m?deli? ef vi? t?kum ?t ?tlagana sem ?arna koma fram. A? ?v? loknu skellum vi? upp n?ju m?deli ?r n?ja gagnasettinu.
+
+```{r, echo = TRUE}
+diag1 <- fortify(stort.st)
+diag1 <- diag1[diag1$.stdresid < 6.5, ]
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+summary(diag1.m)
+```
+
+Af summary a? d?ma hefur m?deli? batna? ?rl?ti?, en ?a? hl?tur a? vera meir sem vi? getum gert. Ef vi? sko?um Q-Q sj?um vi? a? ?a? er afar mikil h?gri slags??a ? dreifingunni (sem ?tti a? fylgja l?nunni). Vi? ver?um a? gera eitthva? ? ?essu ef vi? getum. - Hugsanlega er h?gt a? verpa m?delinu ? einhvern h?tt til a? draga ?r sveigjunni ? Q-Q plottinu. - Til a? ?kvar?a hvers konar v?rpun vi? ?ttum a? nota er ?g?tt a? sko?a boxCox plot.
+
+[H?rna ver?ur QQ og boxCox saman]
+
+Af boxCox plottinu a? d?ma g?ti ?a? b?tt m?deli? ef vi? myndum varpa m?deli? me? ?v? a? taka kva?ratr?t af gildum h??u breytunnar (n?vir?i).
+
+```{r, echo = TRUE}
+fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
+```
+
+? kj?lfari? ?urfum vi? a? vinna me? varpa?a gagnasetti? ? sama h?tt og ?a? ?varpa?a, og sko?um s??an summary af ?v?.
+
+```{r, warning=FALSE, error=FALSE, include=FALSE}
+set.seed(5)
+n <- dim(fasteignir_sorted)[1]
+third <- sample(1:n, n/3)
+testdata <- fasteignir_sorted[third,]
+traindata <- fasteignir_sorted[-third,]
+stort_model <- lm(nuvirdi ~ ., data=traindata)
+stort.st <- step(stort_model)
+diag1 <- fortify(stort.st)
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+####
+p6 <- ggplot(diag1.m, aes(x = seq(1:length(.resid)), y = .resid)) + geom_point()
+p6 <- p6 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
+p6 <- p6 + xlab("Index") + ylab("Residuals")
+p6 <- p6 + geom_text(aes(label = ifelse(abs(.resid) > 100, row.names(diag1), "")), hjust = -0.2)
+
+p <- length(coef(diag1.m))
+n <- length(fitted(diag1.m))
+p7 <- ggplot(diag1.m, aes(x = seq(1:length(.hat)), y = .hat)) + geom_point()
+p7 <- p7 + geom_hline(yintercept = 2 * p/n, col = "red", linetype = "dashed")
+p7 <- p7 + xlab("Index") + ylab("Leverages")
+p7 <- p7 + geom_text(aes(label = ifelse(abs(.hat) > 0.05, row.names(diag1), "")), hjust = -0.3)
+
+p8 <- ggplot(diag1.m, aes(sample = .stdresid)) + stat_qq()
+p8 <- p8 + geom_abline(slope = 1)
+p8 <- p8 + ylab("Studentized residuals")
+
+multiplot(p6, p7, p8, cols=2)
+###
+diag1 <- diag1[diag1$.stdresid < 6.5, ]
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+```
+
+```{r}
+summary(diag1.m)
+```
+
+Eins og vi? sj?um ? summary ?? f?um vi? umtalsvert h?rra sk?ringarhlutfall en ??ur. N? skulum vi? sj? hva? gerist ?egar vi? setjum testdata gagnasetti? inn ? m?deli? og sj?um hvort a? vi? f?um ?s?ttanlegt sk?ringarhlutfall.
+
+```{r, echo = TRUE}
+thefinalcountdown <- predict.lm(diag1.m, newdata = testdata)
+e <- testdata$nuvirdi - thefinalcountdown
+RSS <- sum(e^2)
+TSS <- sum((testdata$nuvirdi - mean(testdata$nuvirdi))^2)
+rAdj <- 1 - ((RSS/725)/(TSS/741))
+```
+
+Sk?ringarhlutfalli? ? testdata gagnasettinu er ?v? `r rAdj`.

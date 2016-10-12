@@ -15,6 +15,43 @@ library(GGally)
 library(car)
 library(stats)
 library(broom)
+
+####
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
 ```
 
 Í þessu verkefni fáum við gagnasett sem inniheldur gögn tæplega 35 þúsund fasteignir. Við munum þó eingöngu vinna með fasteignir í eftirfarandi hverfum:
@@ -80,7 +117,7 @@ Nú skulum við gera módel sem gerir núvirði að háðu breytunni.
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 ```
 
-Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsummar AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept. Að þessari aðgerð lokinni skoðum við summary af nýja módelinu sem við fengum úr steppinu.
+Að því loknu notum við **step()** skipunina til að taka út breytur sem hafa líklega lítil áhrif út. Skipunin skoðar AIC gildin og tekur breytur út sem hafa lægra gildi en viðmiðið. Með því móti er heildarsumma AIC lækkuð í módelinu þar til engin breyta er með lægra AIC gildi en intercept. Að þessari aðgerð lokinni skoðum við summary af nýja módelinu sem við fengum úr steppinu.
 
 ```{r, warning=FALSE, error=FALSE, include=FALSE}
 stort.st <- step(stort_model)
@@ -90,25 +127,48 @@ stort.st <- step(stort_model)
 summary(stort.st)
 ```
 
-Þegar við skoðum [þetta plott] af módelinu sem að við sitjum uppi með eftir steppið, þá sjáum við að hugsanlega gæti það bætt módelið ef við tökum út útlagana sem þarna koma fram. Að því loknu skellum við upp nýju módeli úr nýja gagnasettinu.
+```{r, warning = FALSE, error = FALSE, include = FALSE}
+diag1 <- fortify(stort.st)
+diag1.m2 <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
+```
+
+Þegar við skoðum stundentized residual plot af módelinu sem að við sitjum uppi með eftir steppið, þá sjáum við að hugsanlega gæti það bætt módelið ef við tökum út útlagana sem þarna koma fram. Að því loknu myndum við skella upp nýju módeli úr nýja gagnasettinu.
+
+```{r, echo = FALSE}
+p3 <- ggplot(diag1, aes(x = seq(1:length(.stdresid)), y = .stdresid)) + geom_point()
+p3 <- p3 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
+p3 <- p3 + xlab("Index") + ylab("Studentized residuals")
+p3 <- p3 + geom_text(aes(label = ifelse(abs(.stdresid) > 6.5, row.names(diag1), "")), hjust = -0.1)
+p3
+summary1 <- summary(diag1.m2)
+```
+
+Byrjum á að sjá hvert aðlagaða skýringarhlutfallið er áður en við tökum útlagana út: `r summary1$adj.r.squared`
 
 ```{r, echo = TRUE}
 diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
-summary(diag1.m)
+summary2 <- summary(diag1.m)
+summary2$adj.r.squared
 ```
 
-Af summary að dæma hefur módelið batnað örlítið, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa módelinu á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.
+Sjáum síðan að, þegar útlagarnir hafa verið teknir út, að aðlagaða skýringarhlutfallið er vissulega hærra, eða `r summary2$adj.r.squared`
 
+Af summary að dæma hefur módelið batnað nokkuð, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q plot sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa háðu breytu módelinu á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.
+
+```{r, warning=FALSE, error=FALSE, include=FALSE}
 p8 <- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq()
 p8 <- p8 + geom_abline(slope = 1)
 p8 <- p8 + ylab("Studentized residuals")
+```
+
+```{r echo = TRUE}
 p8
+boxCox(stort.st)
+```
 
-bCp <- boxCox(stort.st)
-
-Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelið með því að taka kvaðratrót af gildum háðu breytunnar (núvirði).
+Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa módelinu með því að taka ferningsrót af gildum háðu breytunnar (núvirði).
 
 ```{r, echo = TRUE}
 fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
@@ -125,22 +185,12 @@ traindata <- fasteignir_sorted[-third,]
 stort_model <- lm(nuvirdi ~ ., data=traindata)
 stort.st <- step(stort_model)
 diag1 <- fortify(stort.st)
-
-p6 <- ggplot(stort.st, aes(x = seq(1:length(.resid)), y = .resid)) + geom_point()
-p6 <- p6 + geom_hline(yintercept = 0, col = "red", linetype = "dashed")
-p6 <- p6 + xlab("Index") + ylab("Residuals")
-p6 <- p6 + geom_text(aes(label = ifelse(abs(.resid) > 75, row.names(diag1), "")), hjust = -0.2)
-  
-p <- length(coef(stort.st))
-n <- length(fitted(stort.st))
-p7 <- ggplot(stort.st, aes(x = seq(1:length(.hat)), y = .hat)) + geom_point()
-p7 <- p7 + geom_hline(yintercept = 2 * p/n, col = "red", linetype = "dashed")
-p7 <- p7 + xlab("Index") + ylab("Leverages")
-p7 <- p7 + geom_text(aes(label = ifelse(abs(.hat) > 0.05, row.names(diag1), "")), hjust = -0.3)
+diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjbkar + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 ```
+
 
 ```{r}
 summary(diag1.m)
@@ -169,4 +219,8 @@ p7
 
 diag1_tafla<-tidy(diag1.m)
 diag1_tafla
-  
+
+sdiag1.m<-summary(diag1.m)
+ sdiag1.m$adj.r.squared
+ 
+ 
