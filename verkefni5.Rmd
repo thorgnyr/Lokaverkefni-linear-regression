@@ -109,7 +109,6 @@ third <- sample(1:n, n/3)
 testdata <- fasteignir_sorted[third,]
 traindata <- fasteignir_sorted[-third,]
 ```
-----
 
 Nú skulum við gera módel sem gerir núvirði að háðu breytunni.
 
@@ -150,12 +149,11 @@ diag1 <- fortify(stort.st)
 diag1 <- diag1[diag1$.stdresid < 6.5, ]
 diag1.m <- lm(nuvirdi ~ teg_eign + byggar + haednr + lyfta + ibm2 + fjhaed + fjbilast + fjsturt + fjklos + fjstof + matssvaedi + ibteg + kaup_ar, data = diag1)
 summary2 <- summary(diag1.m)
-summary2$adj.r.squared
 ```
 
 Sjáum síðan að, þegar útlagarnir hafa verið teknir út, að aðlagaða skýringarhlutfallið er vissulega hærra, eða `r summary2$adj.r.squared`
 
-Af summary að dæma hefur módelið batnað nokkuð, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q plot sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa háðu breytu módelinu á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.
+Af summary að dæma hefur módelið batnað nokkuð, en það hlýtur að vera meir sem við getum gert. Ef við skoðum Q-Q plot sjáum við að það er afar mikil hægri slagsíða í dreifingunni (sem ætti að fylgja línunni). Við verðum að gera eitthvað í þessu ef við getum. - Hugsanlega er hægt að verpa háðu breytu módelsins á einhvern hátt til að draga úr sveigjunni á Q-Q plottinu. - Til að ákvarða hvers konar vörpun við ættum að nota er ágætt að skoða boxCox plot.
 
 ```{r, warning=FALSE, error=FALSE, include=FALSE}
 p8 <- ggplot(stort.st, aes(sample = .stdresid)) + stat_qq()
@@ -163,7 +161,7 @@ p8 <- p8 + geom_abline(slope = 1)
 p8 <- p8 + ylab("Studentized residuals")
 ```
 
-```{r echo = TRUE}
+```{r, echo = FALSE}
 p8
 boxCox(stort.st)
 ```
@@ -174,7 +172,7 @@ Af boxCox plottinu að dæma gæti það bætt módelið ef við myndum varpa m�
 fasteignir_sorted$nuvirdi <- sqrt(fasteignir_sorted$nuvirdi)
 ```
 
-Í kjölfarið þurfum við að vinna með varpaða gagnasettið á sama hátt og það óvarpaða, og skoðum síðan summary af því.
+Í kjölfarið þurfum við að vinna með varpaða gagnasettið á sama hátt og það óvarpaða, og skoðum síðan summary af því. Í summary af módelinu getum við séð áætluð gildi allra breyta (í dálkinum estimates).
 
 ```{r, warning=FALSE, error=FALSE, include=FALSE}
 set.seed(5)
@@ -207,20 +205,14 @@ rAdj <- 1 - ((RSS/725)/(TSS/741))
 ```
 
 Skýringarhlutfallið á testdata gagnasettinu er því `r rAdj`.
+
+Af þessu má dæma að módelið standist þær kröfur sem við settum, enda er skýringarhlutfall þess sambærilegt þegar það er notað á gagnasettin tvö. Módelið má setja fram á eftirfarandi máta:
   
+$$\hat\beta = \beta_0^{\frac{1}{2}} + \beta_{1}X_{1} + \beta_{tegeign2}x_{2} + \beta_{tegeign3}x_{3} + \beta_{tegeign4}x_{4} + \beta_{byggar1}x_{5} + \beta_{byggar2}x_{6} + \beta_{byggar3}x_{7} +$$ 
+$$\beta_{byggar4}x_{8} + \beta_{haednr}x_{9} + \beta_{lyfta1}x_{10} + \beta_{ibm2}x_{11} + \beta_{fjhaed}x_{12} + 
+\beta_{fjbilast1}x_{13} + \beta_{fjbkar}x_{14} + \beta_{fjstof}x_{15} + \beta_{matssvaedi}x_{16} + $$
+$$\beta_{ibteg}x_{17} + \beta_{kaupar1}x_{18} + \beta_{kaupar2}x_{19} + \beta_{kaupar3}x_{20} + 
+\beta_{kaupar4}x_{21} + \beta_{kaupar5}x_{22} + \beta_{kaupar6}x_{23}$$
 
+Þess ber enn fremur að taka fram að $\sigma^2 =$ `r summary(diag1.m)$sigma`.
 
-
-
-
-p6
-p7
-
-
-diag1_tafla<-tidy(diag1.m)
-diag1_tafla
-
-sdiag1.m<-summary(diag1.m)
- sdiag1.m$adj.r.squared
- 
- 

@@ -11,25 +11,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 $$\hat\beta = \beta_0^{1/2} + 
 \beta_{1}X_{1} + 
-\beta_{tegeign2}x_{1} + 
-\beta_{tegeign3}x_{1} + 
-\beta_{tegeign4}x_{1} + 
-\beta_{byggar1}x_{2} + 
-\beta_{byggar2}x_{2} + 
-\beta_{byggar3}x_{2} + 
-\beta_{byggar4}x_{2} +  
-\beta_{haednr}x_{3} + 
-\beta_{lyfta1}x_{4} + 
-\beta_{ibm2}x_{5} + 
-\beta_{fjhaed}x_{6} + 
-\beta_{fjbilast1}x_{7} + 
-\beta_{fjbkar}x_{8} + 
-\beta_{fjstof}x_{9} + 
-\beta_{matssvaedi}x_{10} + 
-\beta_{ibteg}x_{11} + 
-\beta_{kaupar1}x_{12} + 
-\beta_{kaupar2}x_{12} + 
-\beta_{kaupar3}x_{12} + 
-\beta_{kaupar4}x_{12} + 
-\beta_{kaupar5}x_{12} + 
-\beta_{kaupar6}x_{12}$$
+\beta_{tegeign2}x_{2} + 
+\beta_{tegeign3}x_{3} + 
+\beta_{tegeign4}x_{4} + 
+\beta_{byggar1}x_{5} + 
+\beta_{byggar2}x_{6} + 
+\beta_{byggar3}x_{7} + 
+\beta_{byggar4}x_{8} +  
+\beta_{haednr}x_{9} + 
+\beta_{lyfta1}x_{10} + 
+\beta_{ibm2}x_{11} + 
+\beta_{fjhaed}x_{12} + 
+\beta_{fjbilast1}x_{13} + 
+\beta_{fjbkar}x_{14} + 
+\beta_{fjstof}x_{15} + 
+\beta_{matssvaedi}x_{16} + 
+\beta_{ibteg}x_{17} + 
+\beta_{kaupar1}x_{18} + 
+\beta_{kaupar2}x_{19} + 
+\beta_{kaupar3}x_{20} + 
+\beta_{kaupar4}x_{21} + 
+\beta_{kaupar5}x_{22} + 
+\beta_{kaupar6}x_{23}$$
